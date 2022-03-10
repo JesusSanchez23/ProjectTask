@@ -1,12 +1,12 @@
 {
-  "name": "app-salon-php-mvc-sass-s",
+  "name": "project-task",
   "version": "1.0.0",
-  "description": "",
+  "description": "SASS,PHP,JS",
   "main": "index.js",
   "scripts": {
     "start": "gulp"
   },
-  "author": "",
+  "author": "Jesus Sanchez",
   "license": "ISC",
   "devDependencies": {
     "cssnano": "^4.1.10",
@@ -25,5 +25,17 @@
     "gulp-webp": "^4.0.1",
     "sass": "^1.41.1",
     "terser": "^5.3.8"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JesusSanchez23/ProjectTask.git"
+  },
+  "keywords": [
+    "PHP",
+    "JS"
+  ],
+  "bugs": {
+    "url": "https://github.com/JesusSanchez23/ProjectTask/issues"
+  },
+  "homepage": "https://github.com/JesusSanchez23/ProjectTask#readme"
 }
