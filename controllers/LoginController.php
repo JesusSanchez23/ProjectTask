@@ -16,22 +16,27 @@ class LoginController
             $auth = new Usuario($_POST);
             $alertas = $auth->validarLogin();
 
-            if(empty($alertas)){
+            if (empty($alertas)) {
                 // verificar que el usuario exista
                 $usuario = Usuario::where('email', $auth->email);
 
-                if(!$usuario || !$usuario -> confirmado){
+                if (!$usuario || !$usuario->confirmado) {
                     Usuario::setAlerta('error', 'el usuario no existe');
-                }else{
+                } else {
                     // el usuario existe
-                    if(password_verify($_POST['password'], $usuario->password)){
-                        header('Location: /');
-                    }else{
+                    if (password_verify($_POST['password'], $usuario->password)) {
+
+                        session_start();
+                        $_SESSION['id'] = $usuario->id;
+                        $_SESSION['nombre'] = $usuario->nombre;
+                        $_SESSION['email'] = $usuario->email;
+                        $_SESSION['login'] = true;
+                        // redireccionar
+                        header('Location: /dashboard');
+                    } else {
                         Usuario::setAlerta('error', 'La contraseña es incorrecta');
                     }
-
                 }
-
             }
         }
 
@@ -45,6 +50,10 @@ class LoginController
 
     public static function logout()
     {
+        session_start();
+
+        $_SESSION = [];
+        header('Location: /');
     }
 
 
@@ -105,11 +114,11 @@ class LoginController
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $usuario = new Usuario($_POST);
             $alertas = $usuario->validarEmail();
-            if(empty($alertas)){
+            if (empty($alertas)) {
                 // buscar el usuario
                 $usuario = Usuario::where('email', $usuario->email);
 
-                if($usuario && $usuario->confirmado === '1'){
+                if ($usuario && $usuario->confirmado === '1') {
                     unset($usuario->password2);
                     //generar un nuevo token
                     $usuario->crearToken();
@@ -120,12 +129,11 @@ class LoginController
                     $email = new Email($usuario->email, $usuario->nombre, $usuario->token);
                     $email->reestablecerPassword();
                     // Imprimir la alerta
-                    Usuario::setAlerta('exito','Se han enviado instrucciones a tu correo');
+                    Usuario::setAlerta('exito', 'Se han enviado instrucciones a tu correo');
                     // debuguear($usuario);
-                }else{
+                } else {
                     Usuario::setAlerta('error', 'No existe el usuario o no esta confirmado');
                 }
-               
             }
 
             $alertas = Usuario::getAlertas();
@@ -143,15 +151,15 @@ class LoginController
         $alertas = [];
         $mostrar = true;
 
-        if(!$token){
+        if (!$token) {
             header('Location: /');
         }
 
         // identificar el usuario con este token
 
         $usuario = Usuario::where('token', $token);
-        
-        if(empty($usuario)){
+
+        if (empty($usuario)) {
             Usuario::setAlerta('error', 'Token no valido');
             $mostrar = false;
         }
@@ -162,22 +170,21 @@ class LoginController
 
             // validar el password
             $alertas = $usuario->validarPassword();
-       if(empty($alertas)){
-        //    hashear el nuevo password
-        $usuario->hashPassword();
+            if (empty($alertas)) {
+                //    hashear el nuevo password
+                $usuario->hashPassword();
 
-        // eliminar token
-        $usuario->token = null;
+                // eliminar token
+                $usuario->token = null;
 
-        // guardar en BD
-        $resultado = $usuario->guardar();
+                // guardar en BD
+                $resultado = $usuario->guardar();
 
-        // REDIRECCIONAR
-        if($resultado){
-            header('Location: /');
-        }
-
-       }
+                // REDIRECCIONAR
+                if ($resultado) {
+                    header('Location: /');
+                }
+            }
         }
 
         $alertas = Usuario::getAlertas();
@@ -200,17 +207,17 @@ class LoginController
     {
         $token = s($_GET['token']);
 
-        if(!$token){
+        if (!$token) {
             header('Location: /');
         }
 
         // encontrar al usuario con este token
-        $usuario = Usuario::where('token',$token);
+        $usuario = Usuario::where('token', $token);
 
-        if(empty($usuario)){
+        if (empty($usuario)) {
             // no se encontroun usuario con ese token
-            Usuario::setAlerta('error','token no valido');
-        }else{
+            Usuario::setAlerta('error', 'token no valido');
+        } else {
             // confirmar la cuenta
             $usuario->confirmado = 1;
             unset($usuario->password2);
@@ -223,7 +230,7 @@ class LoginController
         }
 
         $alertas = Usuario::getAlertas();
-       
+
         $router->render('auth/confirmar', [
             'titulo' => 'Cuanta verificada',
             'alertas' => $alertas,
